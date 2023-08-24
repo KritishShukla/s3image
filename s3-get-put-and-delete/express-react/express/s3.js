@@ -20,7 +20,7 @@ const s3Client = new S3Client({
 })
 
 
-export function uploadFile(fileBuffer, fileName, mimetype) {
+export async function uploadFile(fileBuffer, fileName, mimetype) {
   const uploadParams = {
     Bucket: bucketName,
     Body: fileBuffer,
@@ -28,7 +28,10 @@ export function uploadFile(fileBuffer, fileName, mimetype) {
     ContentType: mimetype
   }
 
-  return s3Client.send(new PutObjectCommand(uploadParams));
+  await s3Client.send(new PutObjectCommand(uploadParams));
+
+  const imageUrl = await getObjectSignedUrl(fileName); // Get the signed URL for the uploaded file
+  return imageUrl;
 }
 
 export function deleteFile(fileName) {

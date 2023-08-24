@@ -3,23 +3,32 @@ import express from 'express'
 import multer from 'multer'
 import sharp from 'sharp'
 import crypto from 'crypto'
-
-import { PrismaClient } from '@prisma/client'
+import mongoose from 'mongoose'; 
 import { uploadFile, deleteFile, getObjectSignedUrl } from './s3.js'
 import dotenv from 'dotenv'
 
 dotenv.config()
 
 const app = express()
+// const cors=require('cors');
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+// const metaDataRoute=require('./routes/metadata.route')
+// require('./services/connection');
+// app.use(cors());
+// app.use(express.static(__dirname+"./public"));
 
+// app.use('/api',metaDataRoute);
+
+
+
+
+mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true }) // Connect to MongoDB using Mongoose
+  .then(() => {
+    console.log('MongoDB connected successfully');
+  })
+  .catch(error => {
+    console.error('Error connecting to MongoDB:', error);
+  });
 
 const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
@@ -27,12 +36,19 @@ const upload = multer({ storage: storage })
 const generateFileName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
 app.use(express.json())
 
+const postSchema = new mongoose.Schema({
+  caption: String,
+  imageName: String,
+  created: Date,
+  imageUrl: String
+});
+
+const Post = mongoose.model('Post', postSchema);
+
+
 app.get("/api/posts", async (req, res) => {
   try {
-    const posts = await prisma.posts.findMany({ orderBy: [{ created: 'desc' }] });
-    for (let post of posts) {
-      post.imageUrl = await getObjectSignedUrl(post.imageName);
-    }
+    const posts = await Post.find().sort({ created: -1 }).exec();
     res.send(posts);
   } catch (error) {
     console.error("Error fetching posts:", error);
@@ -52,15 +68,16 @@ app.post('/api/posts', upload.single('image'), async (req, res) => {
       .resize({ height: 1920, width: 1080, fit: "contain" })
       .toBuffer()
 
-    await uploadFile(fileBuffer, imageName, file.mimetype)
+    const imageUrl =await uploadFile(fileBuffer, imageName, file.mimetype)
 
-    const post = await prisma.posts.create({
-      data: {
-        imageName,
-        caption,
-      },
-    })
+    const post = new Post({
+      imageName,
+      caption,
+      created: new Date(),
+      imageUrl:imageUrl
+    });
 
+    await post.save();
     res.status(201).send(post)
   } catch (error) {
     console.error("Error creating post:", error)
@@ -69,13 +86,24 @@ app.post('/api/posts', upload.single('image'), async (req, res) => {
 })
 
 app.delete("/api/posts/:id", async (req, res) => {
-  const id = +req.params.id
-  const post = await prisma.posts.findUnique({where: {id}}) 
+  const id = req.params.id
+  try {
+     const post = await Post.findById(id);
 
-  await deleteFile(post.imageName)
+  if (!post) {
+    return res.status(404).send({ error: "Post not found" });
+  }
 
-  await prisma.posts.delete({where: {id: post.id}})
+  await deleteFile(post.imageName);
+  await Post.findByIdAndDelete(id);
   res.send(post)
+  
+  } catch (error) {
+    console.error("Error deleting post:", error)
+  }
+  
 })
+
+
 
 app.listen(8080, () => console.log("listening on port 8080"))
