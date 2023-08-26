@@ -83,13 +83,12 @@ app.delete("/api/posts/:id", async (req, res) => {
   }
 })
 
-app.post("/api/upload-to-s3", async (req, res) => {
+app.post("/api/upload-to-s3", upload.single('image'),async (req, res) => {
   try {
-    const fileBuffer = req.file.buffer;
-    const fileName = generateFileName();
-    const mimeType = req.file.mimetype;
+    const file = req.file
+    const imageName = generateFileName()
 
-    const imageUrl = await uploadFile(fileBuffer, fileName, mimeType);
+    const imageUrl =await uploadFile(file.buffer, imageName, file.mimetype)
     res.status(200).json({ s3ImageUrl: imageUrl });
   } catch (error) {
     console.error("Error uploading to S3:", error);

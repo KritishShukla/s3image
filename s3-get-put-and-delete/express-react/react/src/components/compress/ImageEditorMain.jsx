@@ -214,29 +214,27 @@ const ImageEditorMain = () => {
         canvas.height
       );
   
-      const link = document.createElement("a");
-      link.download = "image_edit." + getFileExtension(state.image);
-      canvas.toBlob((blob) => {
-        link.href = URL.createObjectURL(blob);
-        link.click();
-      });
-
+    
+      const generateFileName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
       canvas.toBlob(async (blob) => {
         if (blob) {
-          // Create a FormData object to send the edited Blob to the backend
-          const formData = new FormData();
-          formData.append("image", blob);
-          console.log(formData)
+         
           try {
-            const response = await axios.post("/api/upload-to-s3", formData);
+            let filename=generateFileName
+            // const blobFile = new File([blob],filename ); 
+            const formData = new FormData();
+            formData.append("image", blob); 
+            const response = await axios.post("/api/upload-to-s3", formData,{
+              headers: { 'Content-Type': 'multipart/form-data' }
+            });
             if (response.status === 200) {
               // The edited image has been uploaded to S3, get the S3 image URL
               const s3ImageUrl = response.data.s3ImageUrl;
   
               // Create a link element for download
               const link = document.createElement("a");
-              link.download = "edited_image.jpg"; // Set the download filename
-              link.href = s3ImageUrl;
+              link.download = "image_edit." + getFileExtension(state.image);
+              link.href = URL.createObjectURL(blob);
               link.click();
             } else {
               console.error("Failed to upload image to S3");
@@ -261,27 +259,28 @@ const ImageEditorMain = () => {
   
 
   const compressImage = () => {
-    // if (state.image) {
-    //   new Compressor(state.image, {
-    //     quality: state.compressionQuality, // Use the specified compression quality
-    //     maxWidth: 800, // Adjust maxWidth as needed
-    //     success(result) {
-    //       handleImageCompression(result);
-    //     },
-    //     error(err) {
-    //       console.error('Compression error:', err.message);
-    //     },
-    //   });
-    // }
+    if (state.image) {
+      console.log("compressImage",state.image)
+      new Compressor(state.image, {
+        quality: state.compressionQuality, // Use the specified compression quality
+        maxWidth: 800, // Adjust maxWidth as needed
+        success(result) {
+          handleImageCompression(result);
+        },
+        error(err) {
+          console.error('Compression error:', err.message);
+        },
+      });
+    }
   };
   
 
   const handleImageCompression = (compressedBlob) => {
-    // const compressedImageUrl = URL.createObjectURL(compressedBlob);
-    // setState({
-    //   ...state,
-    //   image: compressedImageUrl,
-    // });
+    const compressedImageUrl = URL.createObjectURL(compressedBlob);
+    setState({
+      ...state,
+      image: compressedImageUrl,
+    });
   };
 
   return (
