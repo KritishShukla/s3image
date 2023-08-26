@@ -10,22 +10,51 @@ import Navbar from "../navbar/navbar";
 import Compressor from "compressorjs";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-var  imageUrlll=""
-const ImageEditorMain = () => {
 
+
+
+var  imageUrlll=""
+var  blobOrFile=""
+const ImageEditorMain = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const imageUrlParam = queryParams.get('imageUrl');
+  const imageName = queryParams.get('imageName');
+  const imageId=queryParams.get('_id');
+  const [imageResponse, setImageResponse] = useState(null); // Store the API response
+  const [triggerImageHandle, setTriggerImageHandle] = useState(false);
+
   useEffect(() => {
-    if (imageUrlParam) {
-      console.log("ImgaeUrl in EditIamge ",imageUrlParam)
-      if(imageUrlParam != null){
-        imageUrlll=imageUrlParam
-      }
-      
-      imageHandle(null,imageUrlll)
+    if (triggerImageHandle) {
+      imageHandle(null, imageResponse);
+      setTriggerImageHandle(false); // Reset the trigger state
     }
-  }, [imageUrlParam]);
+  }, [triggerImageHandle, imageResponse]);
+
+  useEffect(() => {
+    if (imageName) {
+      console.log("ImageEditorMain ImageName :", imageName)
+      async function fetchData() {
+        try {
+          console.log("ImageEditorMain fetchIamgeName :",imageName)
+          const imageUrl = await axios.get(`/api/getObjectSignedUrl?imageName=${imageName}`);
+          console.log("ImageEditorMain ImageData :", imageUrl.data)
+          const responseBlob = await axios.get(imageUrl.data, { responseType: 'blob' });
+          setImageResponse(responseBlob.data);
+          console.log("ImageEditorMain ImageData :", responseBlob.data)
+          if(imageResponse != null){
+            imageUrlll=imageResponse
+          }
+          setTriggerImageHandle(true);   
+        } catch (error) {
+          console.error("Error fetching image:", error);
+        }
+      }
+
+      fetchData();
+      
+      // imageHandle(null,imageUrlll)
+    }
+  }, [imageName]);
 
 
   const filterElement = [
@@ -71,6 +100,7 @@ const ImageEditorMain = () => {
     vartical: 1,
     horizental: 1,
     compressionQuality: 0.8,
+    blob: null,
   });
   const inputHandle = (e) => {
     setState({
@@ -131,21 +161,17 @@ const ImageEditorMain = () => {
     }
   };
 
-  const imageHandle = (e,imageUrl = null) => {
-    if (imageUrl) {
-      // Set the image using the provided URL
-      setState({
-        ...state,
-        image: imageUrl,
-      });
-    } else if (e.target.files.length !== 0) {
-      const file = e.target.files[0]; // Get the uploaded file
+  const imageHandle = (e, imageBlob) => {
+    if (imageBlob || (e.target.files && e.target.files.length > 0)) {
+      const file = imageBlob || e.target.files[0];
+      const blob = file instanceof Blob ? file : new Blob([file], { type: file.type });
       const reader = new FileReader();
   
       reader.onload = () => {
         setState({
           ...state,
           image: reader.result,
+          blob: blob,
         });
   
         const stateData = {
@@ -159,12 +185,15 @@ const ImageEditorMain = () => {
           rotate: 0,
           vartical: 1,
           horizental: 1,
+          blob: blob,
         };
         storeData.insert(stateData);
       };
+  
       reader.readAsDataURL(file); // Read the file as a data URL
     }
   };
+  
   
   const imageCrop = () => {
     const canvas = document.createElement("canvas");
@@ -218,12 +247,10 @@ const ImageEditorMain = () => {
       const generateFileName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
       canvas.toBlob(async (blob) => {
         if (blob) {
-         
           try {
-            let filename=generateFileName
-            // const blobFile = new File([blob],filename ); 
             const formData = new FormData();
             formData.append("image", blob); 
+            formData.append("imageId", imageId);
             const response = await axios.post("/api/upload-to-s3", formData,{
               headers: { 'Content-Type': 'multipart/form-data' }
             });
@@ -259,9 +286,10 @@ const ImageEditorMain = () => {
   
 
   const compressImage = () => {
-    if (state.image) {
-      console.log("compressImage",state.image)
-      new Compressor(state.image, {
+    console.log(state.blob)
+    if (state.blob) {
+      console.log(state.blob)
+      new Compressor(state.blob, {
         quality: state.compressionQuality, // Use the specified compression quality
         maxWidth: 800, // Adjust maxWidth as needed
         success(result) {

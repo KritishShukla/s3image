@@ -5,7 +5,7 @@ import crypto from 'crypto'
 import mongoose from 'mongoose'; 
 import { uploadFile, deleteFile, getObjectSignedUrl } from './s3.js'
 import dotenv from 'dotenv'
-
+import fetch from 'node-fetch'
 dotenv.config()
 
 const app = express()
@@ -33,9 +33,33 @@ const postSchema = new mongoose.Schema({
 
 const Post = mongoose.model('Post', postSchema);
 
+
+
+
+
+
+
+app.get('/api/getObjectSignedUrl', async (req, res) => {
+  const imageName = req.query.imageName;
+  
+  try {
+    const imageUrl = await getObjectSignedUrl(imageName)
+    res.send(imageUrl);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 app.get("/api/posts", async (req, res) => {
   try {
+    // const posts = await Post.find().sort({ created: -1 }).exec();
+    // res.send(posts);
     const posts = await Post.find().sort({ created: -1 }).exec();
+    
+    for (let post of posts) {
+      post.imageUrl = await getObjectSignedUrl(post.imageName)
+    }
     res.send(posts);
   } catch (error) {
     console.error("Error fetching posts:", error);
@@ -86,9 +110,21 @@ app.delete("/api/posts/:id", async (req, res) => {
 app.post("/api/upload-to-s3", upload.single('image'),async (req, res) => {
   try {
     const file = req.file
+    const imageId = req.body.imageId;
     const imageName = generateFileName()
 
     const imageUrl =await uploadFile(file.buffer, imageName, file.mimetype)
+    const prevpost= await Post.findById(imageId)
+    console.log("previousPost",prevpost)
+    const caption= prevpost.caption
+    const post = new Post({
+      imageName,
+      caption,
+      created: new Date(),
+      imageUrl:imageUrl
+    });
+
+    await post.save();
     res.status(200).json({ s3ImageUrl: imageUrl });
   } catch (error) {
     console.error("Error uploading to S3:", error);

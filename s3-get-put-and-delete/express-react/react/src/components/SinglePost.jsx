@@ -1,40 +1,10 @@
 import { ChatIcon, UserIcon, TrashIcon, PencilIcon } from '@heroicons/react/solid'
 import { HeartIcon as HeartOutline } from '@heroicons/react/outline'
 import { useEffect, useState } from 'react'
-import axios from 'axios'
-
-async function downloadImage(imageUrl) {
-  try {
-    const response = await axios.get(imageUrl, { responseType: 'blob' });
-    return response.data;
-  } catch (error) {
-    console.error('Error downloading image:', error);
-    return null;
-  }
-}
 
 
 export default function SinglePost({ className, post, likeClicked, commentClicked, editClicked, deletePostClicked,editImageClicked }) {
-  const { _id, caption, imageUrl, totalComments, totalLikes } = post
-  const [imageBlob, setImageBlob] = useState(null);
-  const [imageSrc, setImageSrc] = useState(null);
-  useEffect(() => {
-    async function fetchImage() {
-      const blob = await downloadImage(imageUrl);
-      console.log("Imageblob ",blob)
-      setImageBlob(blob);
-    }
-    fetchImage();
-  }, [imageUrl]);
-
-  useEffect(() => {
-    if (imageBlob) {
-      const blobUrl = URL.createObjectURL(imageBlob);
-      setImageSrc(blobUrl);
-    }
-  }, [imageBlob]);
-
-
+  const { _id, caption, imageUrl, totalComments, totalLikes, imageName } = post
   return (
     <div className={className + ' outline-1'} style={{ width: 650 }}>
 
@@ -49,7 +19,7 @@ export default function SinglePost({ className, post, likeClicked, commentClicke
 
         <div className="flex flex-row items-end space-x-4 justify-center">
 
-          <img className="rounded" width="50" height="50" src={imageSrc}  alt="Post" />
+          <img className="rounded" width="50" height="50" src={imageUrl}  alt="Post" />
 
           {/* Actions */}
           <div className='flex flex-row items-center space-x-4'>
@@ -63,9 +33,7 @@ export default function SinglePost({ className, post, likeClicked, commentClicke
             </div>
            
             <div className='flex flex-col items-center' onClick={() => {
-              console.log("Clicked - _id:", _id);
-              console.log("Clicked - imageUrl:", imageSrc);
-              editImageClicked({ _id, imageUrl: imageSrc }); 
+              editImageClicked({ _id,imageName: imageName }); 
               }}>
                 <PencilIcon className='cursor-pointer hover:text-gray-900 active:text-gray-700 h-8 w-8 text-gray-700' />
                 <p>Edit</p>

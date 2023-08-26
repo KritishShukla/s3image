@@ -34,9 +34,10 @@ function App() {
     await axios.delete("/api/posts/" + _id)
     setPosts(posts.filter(post => post._id !== _id))
   }
-  const editImageClicked = ({_id,imageUrl}) =>{ 
-    console.log(" EditIamge ",imageUrl);
-    navigate(`/editImage?imageUrl=${imageUrl}`);
+  const editImageClicked = ({_id,imageName}) =>{
+    console.log(" EditIamge ",imageName)
+    navigate(`/editImage?imageName=${imageName}&postId=${_id}`);
+   
   }
 
   const postActions = {
