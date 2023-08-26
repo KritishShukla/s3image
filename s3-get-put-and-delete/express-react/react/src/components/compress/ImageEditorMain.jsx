@@ -225,7 +225,7 @@ const ImageEditorMain = () => {
           // Create a FormData object to send the edited Blob to the backend
           const formData = new FormData();
           formData.append("image", blob);
-  
+          console.log(formData)
           try {
             const response = await axios.post("/api/upload-to-s3", formData);
             if (response.status === 200) {
@@ -245,7 +245,6 @@ const ImageEditorMain = () => {
           }
         }
       }, "image/jpeg");
-
     }
   };
   
