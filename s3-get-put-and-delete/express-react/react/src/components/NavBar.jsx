@@ -37,7 +37,7 @@ export default function NavBar({onHome, onNewPost}) {
                     alt="Workflow"
                   />
 
-                    <h1 className="text-white">InstaSam</h1>
+                    <h1 className="text-white">Optipic</h1>
 
                 </button>
                 <div className="hidden sm:block sm:ml-6">

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 
 import SinglePost from '../SinglePost'
-
+import ImageEditorMain from '../compress/ImageEditorMain.jsx';
 import { useNavigate } from 'react-router-dom'
 
 
@@ -19,27 +19,32 @@ function App() {
     getPosts()
   }, [])
 
-  const likeClicked = async ({id}) => {
-    console.log(`likeClicked = (${id})`)
+  const likeClicked = async ({_id}) => {
+    console.log(`likeClicked = (${_id})`)
   }
-  const commentClicked = ({id}) => {
-    console.log(`commentClicked = (${id})`)
+  const commentClicked = ({_id}) => {
+    console.log(`commentClicked = (${_id})`)
   }
-  const editPostClicked = ({id}) => {
-    navigate("/editPost/" + id)
-    console.log(`editPostClicked = (${id})`)
+  const editPostClicked = ({_id}) => {
+    navigate("/editPost/" + _id)
+    console.log(`editPostClicked = (${_id})`)
   }
-  const deletePostClicked = async ({id}) => {
-    console.log(`deletePostClicked = (${id})`)
-    await axios.delete("/api/posts/" + id)
-    setPosts(posts.filter(post => post.id !== id))
+  const deletePostClicked = async ({_id}) => {
+    console.log(`deletePostClicked = (${_id})`)
+    await axios.delete("/api/posts/" + _id)
+    setPosts(posts.filter(post => post._id !== _id))
+  }
+  const editImageClicked = ({_id,imageUrl}) =>{ 
+    console.log(" EditIamge ",imageUrl);
+    navigate(`/editImage?imageUrl=${imageUrl}`);
   }
 
   const postActions = {
     likeClicked,
     commentClicked,
     editPostClicked,
-    deletePostClicked
+    deletePostClicked,
+    editImageClicked
   }
 
 
@@ -48,7 +53,7 @@ function App() {
 
       <div className="flex flex-col space-y-100 items-center divide-y">
         {posts.map(post => (
-          <div key={`post-${post.id}`} className="px-5 py-14">
+          <div key={`post-${post._id}`} className="px-5 py-14">
 
             <SinglePost className="relative" post={post} {...postActions}></SinglePost>
             

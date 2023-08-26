@@ -1,7 +1,6 @@
+//version1
 import express from 'express'
-
 import multer from 'multer'
-import sharp from 'sharp'
 import crypto from 'crypto'
 import mongoose from 'mongoose'; 
 import { uploadFile, deleteFile, getObjectSignedUrl } from './s3.js'
@@ -10,19 +9,8 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const app = express()
-// const cors=require('cors');
 
-// const metaDataRoute=require('./routes/metadata.route')
-// require('./services/connection');
-// app.use(cors());
-// app.use(express.static(__dirname+"./public"));
-
-// app.use('/api',metaDataRoute);
-
-
-
-
-mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true }) // Connect to MongoDB using Mongoose
+mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log('MongoDB connected successfully');
   })
@@ -45,7 +33,6 @@ const postSchema = new mongoose.Schema({
 
 const Post = mongoose.model('Post', postSchema);
 
-
 app.get("/api/posts", async (req, res) => {
   try {
     const posts = await Post.find().sort({ created: -1 }).exec();
@@ -56,20 +43,14 @@ app.get("/api/posts", async (req, res) => {
   }
 });
 
-
-
 app.post('/api/posts', upload.single('image'), async (req, res) => {
   try {
     const file = req.file
     const caption = req.body.caption
     const imageName = generateFileName()
-
-    const fileBuffer = await sharp(file.buffer)
-      .resize({ height: 1920, width: 1080, fit: "contain" })
-      .toBuffer()
-
-    const imageUrl =await uploadFile(fileBuffer, imageName, file.mimetype)
-
+    
+    const imageUrl =await uploadFile(file.buffer, imageName, file.mimetype)
+  
     const post = new Post({
       imageName,
       caption,
@@ -88,22 +69,32 @@ app.post('/api/posts', upload.single('image'), async (req, res) => {
 app.delete("/api/posts/:id", async (req, res) => {
   const id = req.params.id
   try {
-     const post = await Post.findById(id);
+    const post = await Post.findById(id);
 
-  if (!post) {
-    return res.status(404).send({ error: "Post not found" });
-  }
+    if (!post) {
+      return res.status(404).send({ error: "Post not found" });
+    }
 
-  await deleteFile(post.imageName);
-  await Post.findByIdAndDelete(id);
-  res.send(post)
-  
-  } catch (error) {
+    await deleteFile(post.imageName);
+    await Post.findByIdAndDelete(id);
+    res.send(post)
+  } catch (error) { 
     console.error("Error deleting post:", error)
   }
-  
 })
 
+app.post("/api/upload-to-s3", async (req, res) => {
+  try {
+    const fileBuffer = req.file.buffer;
+    const fileName = generateFileName();
+    const mimeType = req.file.mimetype;
 
+    const imageUrl = await uploadFile(fileBuffer, fileName, mimeType);
+    res.status(200).json({ s3ImageUrl: imageUrl });
+  } catch (error) {
+    console.error("Error uploading to S3:", error);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+});
 
 app.listen(8080, () => console.log("listening on port 8080"))
