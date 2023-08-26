@@ -9,6 +9,7 @@ import storeData from "./linked";
 import Navbar from "../navbar/navbar";
 import Compressor from "compressorjs";
 import { useLocation } from "react-router-dom";
+import axios from "axios";
 var  imageUrlll=""
 const ImageEditorMain = () => {
 
