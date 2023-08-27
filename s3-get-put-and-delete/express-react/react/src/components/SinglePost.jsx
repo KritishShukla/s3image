@@ -1,19 +1,22 @@
-import { UserIcon, TrashIcon, PencilIcon } from '@heroicons/react/solid'
-import { HeartIcon as HeartOutline } from '@heroicons/react/outline'
-import { useEffect, useState } from 'react'
+import { TrashIcon, PencilIcon } from '@heroicons/react/solid';
+import { useEffect, useState } from 'react';
 
-export default function SinglePost({ className, post, likeClicked, commentClicked, editClicked, deletePostClicked, editImageClicked }) {
+export default function SinglePost({
+  className,
+  post,
+  likeClicked,
+  commentClicked,
+  editClicked,
+  deletePostClicked,
+  editImageClicked
+}) {
   const { _id, caption, imageUrl, imageName } = post;
-  console.log(post);
 
   return (
     <div className={`bg-white shadow-lg rounded-lg ${className}`} style={{ maxWidth: 400 }}>
       <div className="p-4">
-        <div className="flex flex-row items-center space-x-4 cursor-pointer active:opacity-80">
-          <UserIcon className='cursor-pointer hover:text-gray-900 active:text-gray-700 h-8 w-8 text-gray-700' />
-          <p className="text-base hover:underline">username</p>
-        </div>
-        <p className="text-base mt-2">{caption}</p>
+        {/* Caption */}
+        <p className="text-base font-bold mt-2">{caption}</p>
 
         {/* Card containing image and buttons */}
         <div className='flex flex-col items-center space-y-4 mt-4'>
