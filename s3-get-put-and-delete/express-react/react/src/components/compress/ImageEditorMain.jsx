@@ -164,14 +164,13 @@ const ImageEditorMain = () => {
   const imageHandle = (e, imageBlob) => {
     if (imageBlob || (e.target.files && e.target.files.length > 0)) {
       const file = imageBlob || e.target.files[0];
-      const blob = file instanceof Blob ? file : new Blob([file], { type: file.type });
       const reader = new FileReader();
   
       reader.onload = () => {
         setState({
           ...state,
           image: reader.result,
-          blob: blob,
+          blob: file,
         });
   
         const stateData = {
@@ -185,7 +184,7 @@ const ImageEditorMain = () => {
           rotate: 0,
           vartical: 1,
           horizental: 1,
-          blob: blob,
+          blob: file,
         };
         storeData.insert(stateData);
       };
@@ -251,7 +250,7 @@ const ImageEditorMain = () => {
             const formData = new FormData();
             formData.append("image", blob); 
             formData.append("imageId", imageId);
-            const response = await axios.post("/api/upload-to-s3", formData,{
+            const response = await axios.post("http://13.48.94.31:8080/api/upload-to-s3", formData,{
               headers: { 'Content-Type': 'multipart/form-data' }
             });
             if (response.status === 200) {

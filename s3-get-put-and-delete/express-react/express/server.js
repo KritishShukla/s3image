@@ -5,7 +5,9 @@ import crypto from 'crypto'
 import mongoose from 'mongoose'; 
 import { uploadFile, deleteFile, getObjectSignedUrl } from './s3.js'
 import dotenv from 'dotenv'
-import fetch from 'node-fetch'
+import exiftoolBin from 'dist-exiftool';
+import exiftool from 'node-exiftool';
+ import fs from 'fs';
 dotenv.config()
 
 const app = express()
@@ -18,6 +20,7 @@ mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopol
     console.error('Error connecting to MongoDB:', error);
   });
 
+
 const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
 
@@ -26,6 +29,7 @@ app.use(express.json())
 
 const postSchema = new mongoose.Schema({
   caption: String,
+  title: String,
   imageName: String,
   created: Date,
   imageUrl: String
@@ -35,7 +39,24 @@ const Post = mongoose.model('Post', postSchema);
 
 
 
+const metaDataSchema = new mongoose.Schema({
+    fileName: {
+        type: String,
+        required: true,
+        index: true
+    },
+    originalName: {
+        type: String
+    },
+    size: {
+        type: Number
+    },
+    information: {
+        type: Object
+    }
+}, { timestamps: true });
 
+const MetaDataModel = mongoose.model('metadata', metaDataSchema);
 
 
 
@@ -69,21 +90,49 @@ app.get("/api/posts", async (req, res) => {
 
 app.post('/api/posts', upload.single('image'), async (req, res) => {
   try {
+    if (!req.file) {
+      return res.status(404).send({ message: "File Not Found", status: 404 });
+    }
+    
     const file = req.file
     const caption = req.body.caption
-    const imageName = generateFileName()
-    
+    const title = req.body.title;
+    const imageName = req.file.originalname
     const imageUrl =await uploadFile(file.buffer, imageName, file.mimetype)
   
     const post = new Post({
       imageName,
+      title,
       caption,
       created: new Date(),
       imageUrl:imageUrl
     });
-
     await post.save();
-    res.status(201).send(post)
+
+    const ep = new exiftool.ExiftoolProcess(exiftoolBin);
+
+        // Read metadata from the uploaded buffer
+        try {
+            const rs = Buffer.from(req.file.buffer); // Convert the buffer to a readable stream
+            await ep.open();
+
+            const result = await ep.readMetadata(rs, ['-File:all']);
+            const metadata = new MetaDataModel({
+                fileName: req.file.originalname, // Use original name or any suitable value
+                originalName: req.file.originalname,
+                size: req.file.size,
+                information: result.data[0]
+            });
+
+            await metadata.save();
+            console.log("MetaDataTag", metadata);
+
+            await ep.close();
+        } catch (error) {
+            console.error('Error processing metadata:', error);
+            await ep.close();
+         }
+   res.status(201).send(post)
   } catch (error) {
     console.error("Error creating post:", error)
     res.status(500).send({ error: "Internal Server Error" })
