@@ -26,11 +26,11 @@
                 .reset {
                     margin-top: 20px;
                     .save{
-                        background-color: #e335f3 !important;
+                        background-color: #cf4913 !important;
                         margin-left: 5px;
                     }
                     button {
-                        background-color: rgb(242,53,85);
+                        background-color: rgb(14, 10, 228);
                         padding: 8px;
                         border-radius: 3px;
                         outline: none;
@@ -152,6 +152,8 @@
                     margin: 20px 0px;
                     display: flex;
                     justify-content: flex-end;
+                    align-items: center;
+                    margin-top: 5px; 
                     input {
                         display: none;
                     }
@@ -166,6 +168,8 @@
                         font-weight: 600;
                         text-transform: capitalize;
                         font-size: 15px;
+                        margin-left: 5px;
+                        margin-bottom: 5px;
                     }
                     .redo,
                     .undo {
@@ -183,6 +187,29 @@
                         background-color: #8e33b7;
                         margin-left: 5px;
                     }
+                }
+                .reset_save{
+                    display: flex;
+          justify-content: center;
+                    margin-top: 20px;
+                    .save{
+                        background-color: #cf4913 !important;
+                        margin-left: 5px;
+                    }
+                    button {
+                        background-color: rgb(14, 10, 228);
+                        padding: 8px;
+                        border-radius: 3px;
+                        outline: none;
+                        border: 1px solid #dad7d7;
+                        cursor: pointer;
+                        color: #fff;
+                        font-weight: 600;
+                        text-transform: capitalize;
+                        font-size: 15px;
+                        
+                    }
+                    
                 }
             }
         }

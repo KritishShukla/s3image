@@ -38,11 +38,22 @@ export default function NewPost() {
   return (
     <div className="flex flex-col items-center justify-center">
 
-        <form onSubmit={submit} style={{width:650}} className="flex flex-col space-y-5 px-5 py-14">
-          <input onChange={fileSelected} type="file" name="image" accept="image/*"></input>
-          <input value={caption} onChange={e => setCaption(e.target.value)} type="text" placeholder='Caption'></input>
-          <button type="submit">Submit</button>
-        </form>
+      <form onSubmit={submit} style={{ width: 650 }} className="flex flex-col space-y-5 px-5 py-14">
+        <input onChange={fileSelected} type="file" name="image" accept="image/*"></input>
+        <input
+          value={caption}
+          onChange={e => setCaption(e.target.value)}
+          type="text"
+          placeholder="Caption"
+          className="border border-gray-300 rounded py-2 px-4 focus:outline-none focus:ring focus:ring-blue-300"
+        />
+        <button
+          type="submit"
+          className="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
+        >
+          Submit
+        </button>
+      </form>
 
     </div>
   )

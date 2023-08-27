@@ -13,6 +13,12 @@ import axios from "axios";
 var  imageUrlll=""
 const ImageEditorMain = () => {
 
+  const [overlay, setOverlay] = useState({
+    image: null,
+    positionX: 0,
+    positionY: 0,
+  });
+
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const imageUrlParam = queryParams.get('imageUrl');
@@ -72,6 +78,7 @@ const ImageEditorMain = () => {
     horizental: 1,
     compressionQuality: 0.8,
   });
+  
   const inputHandle = (e) => {
     setState({
       ...state,
@@ -283,6 +290,16 @@ const ImageEditorMain = () => {
     });
   };
 
+  const handleOverlayImage = (e) => {
+    const overlayImage = e.target.files[0];
+    setOverlay({
+      ...overlay,
+      image: URL.createObjectURL(overlayImage),
+      positionX: 0, // Reset the X position when uploading a new overlay image
+      positionY: 0, // Reset the Y position when uploading a new overlay image
+    });
+  };
+
   return (
     <>
        <Navbar/>
@@ -311,7 +328,7 @@ const ImageEditorMain = () => {
               </div>
               <div className="filter_slider">
                 <div className="label_bar">
-                  <label htmlFor="range">Rotate</label>
+                  <label htmlFor="range">Effects</label>
                   <span>100%</span>
                 </div>
                 <input
@@ -322,6 +339,23 @@ const ImageEditorMain = () => {
                   type="range"
                 />
               </div>
+              <div className="filter_slider">
+            <div className="label_bar">
+              <label htmlFor="rotationRange">Rotation</label>
+              <span>{state.rotate}°</span>
+            </div>
+            <input
+              id="rotationRange"
+              name="rotate"
+              onChange={inputHandle}
+              value={state.rotate}
+              max="360"
+              min="0"
+              step="1"
+              type="range"
+            />
+          </div>
+          <div className="rotate-reset-container">
               <div className="rotate">
                 <label htmlFor="">Rotate & Filp</label>
                 <div className="icon">
@@ -341,28 +375,83 @@ const ImageEditorMain = () => {
               </div>
             </div>
             <div className="reset">
-            <button>Reset</button>
-            <button onClick={saveImage} className="save">
-              Save Image
-            </button>
-            {/* Place the compression quality slider and span beside the "Compress Image" button */}
-            <div className="compression-options">
-              <button onClick={compressImage} className="compress">
-                Compress Image
-              </button>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01" // Adjust the step value as needed
-                value={state.compressionQuality}
-                onChange={(e) => setState({ ...state, compressionQuality: parseFloat(e.target.value) })}
-              />
-              <span>Compression Quality: {state.compressionQuality}</span>
+              {/* ... Other code ... */}
+              <div className="compression-options">
+                <button onClick={compressImage} className="compress">
+                  Compress Image
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01" // Adjust the step value as needed
+                  value={state.compressionQuality}
+                  onChange={(e) =>
+                    setState({ ...state, compressionQuality: parseFloat(e.target.value) })
+                  }
+                />
+                <span>Compression Quality: {state.compressionQuality}</span>
+              </div>
+              {/* <button>Reset</button>
+              <button onClick={saveImage} className="save">
+                Save Image
+              </button> */}
+            </div>
             </div>
           </div>
-          </div>
           <div className="image_section">
+          <input
+                type="file"
+                id="overlayImage"
+                onChange={handleOverlayImage}
+              />
+              <label htmlFor="overlayImage">Upload Overlay Image</label>
+
+              {/* Display the overlay image */}
+              <div className="image_overlay">
+                {overlay.image && (
+                  <img
+                    src={overlay.image}
+                    alt="Overlay"
+                    style={{
+                      position: "absolute",
+                      left: `${overlay.positionX}px`,
+                      top: `${overlay.positionY}px`,
+                      maxWidth: "100%", // Ensure the overlay image doesn't exceed its container
+                      maxHeight: "100%", // Ensure the overlay image doesn't exceed its container
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* Set overlay position */}
+              <div className="overlay_position">
+                <label htmlFor="overlayX">Overlay X Position:</label>
+                <input
+                  type="number"
+                  id="overlayX"
+                  value={overlay.positionX}
+                  onChange={(e) =>
+                    setOverlay({
+                      ...overlay,
+                      positionX: parseInt(e.target.value),
+                    })
+                  }
+                />
+
+                <label htmlFor="overlayY">Overlay Y Position:</label>
+                <input
+                  type="number"
+                  id="overlayY"
+                  value={overlay.positionY}
+                  onChange={(e) =>
+                    setOverlay({
+                      ...overlay,
+                      positionY: parseInt(e.target.value),
+                    })
+                  }
+                />
+              </div>
             <div className="image">
               {state.image ? (
                 <ReactCrop crop={crop} onChange={(c) => setCrop(c)}>
@@ -394,10 +483,19 @@ const ImageEditorMain = () => {
                 <button onClick={imageCrop} className="crop">
                   Crop Image
                 </button>
+                
               )}
-              <label htmlFor="choose">Choose Image</label>
-              <input onChange={imageHandle} type="file" id="choose" />
+              
+              {/* <label htmlFor="choose">Choose Image</label>
+              <input onChange={imageHandle} type="file" id="choose" /> */}
+              
             </div>
+            <div className="reset_save">
+            <button>Reset</button>
+              <button onClick={saveImage} className="save">
+                Save Image
+              </button>
+             </div> 
           </div>
         </div>
       </div>
