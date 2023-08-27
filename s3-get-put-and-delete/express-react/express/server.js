@@ -6,9 +6,13 @@ import mongoose from 'mongoose';
 import { uploadFile, deleteFile, getObjectSignedUrl } from './s3.js'
 import dotenv from 'dotenv'
 import fetch from 'node-fetch'
+import cors from 'cors';
+
 dotenv.config()
 
 const app = express()
+
+app.use(cors());
 
 mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
