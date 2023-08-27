@@ -49,7 +49,7 @@ export default function NewPost() {
         />
         <button
           type="submit"
-          className="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
+          className="bg-orange-400 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 focus:outline-none focus:ring focus:ring-blue-300"
         >
           Submit
         </button>
