@@ -7,10 +7,13 @@ import { uploadFile, deleteFile, getObjectSignedUrl } from './s3.js'
 import dotenv from 'dotenv'
 import exiftoolBin from 'dist-exiftool';
 import exiftool from 'node-exiftool';
- import fs from 'fs';
+import cors from 'cors';
+
 dotenv.config()
 
 const app = express()
+
+app.use(cors());
 
 mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
