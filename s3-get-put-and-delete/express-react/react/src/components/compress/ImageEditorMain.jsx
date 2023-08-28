@@ -19,10 +19,16 @@ const ImageEditorMain = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const imageName = queryParams.get('imageName');
-  const imageId=queryParams.get('_id');
+  const imageId=queryParams.get('id');
   const [imageResponse, setImageResponse] = useState(null); // Store the API response
   const [triggerImageHandle, setTriggerImageHandle] = useState(false);
-
+  
+  const [overlay, setOverlay] = useState({	
+    image: null,	
+    positionX: 0,	
+    positionY: 0,	
+  });
+  
   useEffect(() => {
     if (triggerImageHandle) {
       imageHandle(null, imageResponse);
@@ -36,7 +42,7 @@ const ImageEditorMain = () => {
       async function fetchData() {
         try {
           console.log("ImageEditorMain fetchIamgeName :",imageName)
-          const imageUrl = await axios.get(`/api/getObjectSignedUrl?imageName=${imageName}`);
+          const imageUrl = await axios.get(`http://13.48.94.31:8080/api/getObjectSignedUrl?imageName=${imageName}`);
           console.log("ImageEditorMain ImageData :", imageUrl.data)
           const responseBlob = await axios.get(imageUrl.data, { responseType: 'blob' });
           setImageResponse(responseBlob.data);
@@ -247,6 +253,7 @@ const ImageEditorMain = () => {
       canvas.toBlob(async (blob) => {
         if (blob) {
           try {
+            console.log("iamgeId inside", imageId)
             const formData = new FormData();
             formData.append("image", blob); 
             formData.append("imageId", imageId);
@@ -309,15 +316,25 @@ const ImageEditorMain = () => {
       image: compressedImageUrl,
     });
   };
+  const handleOverlayImage = (e) => {	
+    const overlayImage = e.target.files[0];	
+    setOverlay({	
+      ...overlay,	
+      image: URL.createObjectURL(overlayImage),	
+      positionX: 0, // Reset the X position when uploading a new overlay image	
+      positionY: 0, // Reset the Y position when uploading a new overlay image	
+    });	
+  };	
+ 
 
   return (
     <>
        <Navbar/>
     <div className="image_editor">
-   
+ 
       <div className="card">
         <div className="card_header">
-          <h2>------ Image Editor ------</h2>
+          <h2>------ Edit Image ------</h2>
         </div>
         <div className="card_body">
           <div className="sidebar">
@@ -338,7 +355,7 @@ const ImageEditorMain = () => {
               </div>
               <div className="filter_slider">
                 <div className="label_bar">
-                  <label htmlFor="range">Rotate</label>
+                  <label htmlFor="range">Effects</label>
                   <span>100%</span>
                 </div>
                 <input
@@ -349,6 +366,23 @@ const ImageEditorMain = () => {
                   type="range"
                 />
               </div>
+              <div className="filter_slider">
+            <div className="label_bar">
+              <label htmlFor="rotationRange">Rotation</label>
+              <span>{state.rotate}°</span>
+            </div>
+            <input
+              id="rotationRange"
+              name="rotate"
+              onChange={inputHandle}
+              value={state.rotate}
+              max="360"
+              min="0"
+              step="1"
+              type="range"
+            />
+          </div>
+          <div className="rotate-reset-container">
               <div className="rotate">
                 <label htmlFor="">Rotate & Filp</label>
                 <div className="icon">
@@ -368,29 +402,34 @@ const ImageEditorMain = () => {
               </div>
             </div>
             <div className="reset">
-            <button>Reset</button>
-            <button onClick={saveImage} className="save">
-              Save Image
-            </button>
-            {/* Place the compression quality slider and span beside the "Compress Image" button */}
-            <div className="compression-options">
-              <button onClick={compressImage} className="compress">
-                Compress Image
-              </button>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01" // Adjust the step value as needed
-                value={state.compressionQuality}
-                onChange={(e) => setState({ ...state, compressionQuality: parseFloat(e.target.value) })}
-              />
-              <span>Compression Quality: {state.compressionQuality}</span>
+              {/* ... Other code ... */}
+              <div className="compression-options">
+                <button onClick={compressImage} className="compress">
+                  Compress Image
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01" // Adjust the step value as needed
+                  value={state.compressionQuality}
+                  onChange={(e) =>
+                    setState({ ...state, compressionQuality: parseFloat(e.target.value) })
+                  }
+                />
+                <span>Compression Quality: {state.compressionQuality}</span>
+              </div>
+              {/* <button>Reset</button>
+              <button onClick={saveImage} className="save">
+                Save Image
+              </button> */}
+            </div>
             </div>
           </div>
-          </div>
           <div className="image_section">
+         
             <div className="image">
+                
               {state.image ? (
                 <ReactCrop crop={crop} onChange={(c) => setCrop(c)}>
                   <img
@@ -421,10 +460,19 @@ const ImageEditorMain = () => {
                 <button onClick={imageCrop} className="crop">
                   Crop Image
                 </button>
+ 
               )}
-              <label htmlFor="choose">Choose Image</label>
-              <input onChange={imageHandle} type="file" id="choose" />
+ 
+              {/* <label htmlFor="choose">Choose Image</label>
+              <input onChange={imageHandle} type="file" id="choose" /> */}
+ 
             </div>
+            <div className="reset_save">
+            <button>Reset</button>
+              <button onClick={saveImage} className="save">
+                Save Image
+              </button>
+             </div> 
           </div>
         </div>
       </div>

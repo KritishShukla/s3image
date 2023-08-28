@@ -13,6 +13,8 @@
     "autoprefixer": "^10.4.7",
     "axios": "^0.27.2",
     "compressorjs": "^1.2.1",
+    "framer-motion": "^10.16.1",
+    "particles.js": "^2.0.0",
     "postcss": "^8.4.14",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
